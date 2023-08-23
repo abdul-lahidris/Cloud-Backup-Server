@@ -39,18 +39,18 @@ const uploadFileHandler = async (
     Key: `${path}/${Date.now()}_${file.originalname}`,
     Body: file.buffer,
   };
-  console.log("PARAMS CONFIGURED", params);
+  // console.log("PARAMS CONFIGURED", params);
 
   const uploadOptions = {
     partSize: 10 * 1024 * 1024, // 10 MB part size
   };
 
-  console.log("OPTIONS CONFIGURED", uploadOptions);
+  // console.log("OPTIONS CONFIGURED", uploadOptions);
 
   try {
-    console.log('uploading...');
+    // console.log('uploading...');
     const result = await s3.upload(params, uploadOptions).promise();
-    console.log('done');
+    // console.log('done');
     return {fileUrl: result.Location };
   
 } catch (error) {
@@ -300,7 +300,7 @@ export const createFileHandler = async (
       }
       
       try {
-        console.log(params);
+        // console.log(params);
         const headObject = await s3.headObject(params).promise();
     
         res.setHeader('Content-Length', headObject.ContentLength?.toString()!);
