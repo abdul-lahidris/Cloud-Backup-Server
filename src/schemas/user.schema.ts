@@ -41,6 +41,14 @@ export const verifyEmailSchema = object({
   }),
 });
 
+export const getByIdSchema = object({
+  params: object({
+    userId: string(),
+  }),
+});
+
+
+
 export type CreateUserInput = Omit<
   TypeOf<typeof createUserSchema>['body'],
   'passwordConfirm'
@@ -48,3 +56,5 @@ export type CreateUserInput = Omit<
 
 export type LoginUserInput = TypeOf<typeof loginUserSchema>['body'];
 export type VerifyEmailInput = TypeOf<typeof verifyEmailSchema>['params'];
+
+export type GetUserByIdInput = TypeOf<typeof getByIdSchema>['params'];

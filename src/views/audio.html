@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rise Test Media Streaming - abdullahidris</title>
+</head>
+<body>
+  <h1>Audio Streaming</h1>
+  
+  <h2>Audio Player</h2>
+  <audio controls>
+    <source id="audioSource" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    const audioPlayer = document.getElementById('audioSource');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('id');
+
+    // Update the server URL
+    const serverUrl = location.host;// 'http://localhost:8000';
+    audioPlayer.src = `http://${serverUrl}/api/stream/${fileId}`;
+  </script>
+</body>
+</html>

@@ -30,7 +30,7 @@ export class User extends Model {
     enum: RoleEnumType,
     default: RoleEnumType.USER,
   })
-  role: RoleEnumType.USER;
+  role: RoleEnumType;
 
   @Column({
     default: false, 

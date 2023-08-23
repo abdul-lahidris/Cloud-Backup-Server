@@ -8,7 +8,9 @@ import { AppDataSource } from './utils/data-source';
 import AppError from './utils/appError';
 import authRouter from './routes/auth.routes';
 import userRouter from './routes/user.routes';
-// import postRouter from './routes/post.routes';
+import fileRouter from './routes/file.routes';
+import folderRouter from './routes/folder.routes';
+import streamRouter from './routes/stream.routes';
 import validateEnv from './utils/validateEnv';
 import redisClient from './utils/connectRedis';
 
@@ -25,9 +27,16 @@ AppDataSource.initialize()
 
     const app = express();
 
-    // TEMPLATE ENGINE
-    app.set('view engine', 'pug');
-    app.set('views', `${__dirname}/views`);
+    // PAGES
+
+    app.get('/audio', (req, res) => {
+      res.sendFile('audio.html', { root: './src/views' });
+    });
+    
+    // Route for serving video HTML
+    app.get('/video', (req, res) => {
+      res.sendFile('video.html', { root: './src/views' });
+    });
 
     // MIDDLEWARE
 
@@ -50,8 +59,10 @@ AppDataSource.initialize()
 
     // ROUTES
     app.use('/api/auth', authRouter);
+    app.use('/api/stream', streamRouter);
     app.use('/api/users', userRouter);
-    // app.use('/api/posts', postRouter);
+    app.use('/api/folders', folderRouter);
+    app.use('/api/files', fileRouter);
 
     // HEALTH CHECKER
     app.get('/api/healthChecker', async (_, res: Response) => {

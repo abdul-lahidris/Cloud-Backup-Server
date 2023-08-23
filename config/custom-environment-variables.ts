@@ -19,4 +19,10 @@ export default {
     port: 'EMAIL_PORT',
     user: 'EMAIL_USER',
   },
+
+  S3: {
+    accesskey: 'AWS_ACCESS_KEY_ID',
+    secretKey: 'AWS_SECRET_ACCESS_KEY',
+    bucket:'AWS_BUCKET_NAME'
+  }
 };

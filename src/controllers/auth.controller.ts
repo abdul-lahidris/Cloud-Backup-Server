@@ -18,6 +18,8 @@ import redisClient from '../utils/connectRedis';
 import { signJwt, verifyJwt } from '../utils/jwt';
 import { User } from '../entities/user.entity';
 import Email from '../utils/email';
+import { createFolder } from '../services/folder.service';
+
 
 const cookiesOptions: CookieOptions = {
   httpOnly: true,
@@ -53,7 +55,7 @@ export const registerUserHandler = async (
     const newUser = await createUser({
       name,
       email: email.toLowerCase(),
-      password,
+      password: password,
     });
 
     const { hashedVerificationCode, verificationCode } =
@@ -61,28 +63,41 @@ export const registerUserHandler = async (
     newUser.verificationCode = hashedVerificationCode;
     await newUser.save();
 
+    // create user's Root folder
+    // The name of a user's root folder is the user's Id
+    await createFolder({
+      name: newUser.id,
+      path: "root",
+      userId: newUser.id
+    });
+
     // Send Verification Email
-    const redirectUrl = `${config.get<string>(
-      'origin'
-    )}/verifyemail/${verificationCode}`;
+    // const redirectUrl = `${config.get<string>(
+    //   'origin'
+    // )}/verifyemail/${verificationCode}`;
+    const apiUrl: string = `${config.get<string>('origin')}/api/auth/verifyemail/${verificationCode}`;
+    res.status(201).json({
+      status: 'success',
+      message:'Use this link to verify your email',
+      verifyUrl: apiUrl
+    });
+    // try {
+    //   await new Email(newUser, redirectUrl).sendVerificationCode();
 
-    try {
-      await new Email(newUser, redirectUrl).sendVerificationCode();
+    //   res.status(201).json({
+    //     status: 'success',
+    //     message:
+    //       'An email with a verification code has been sent to your email',
+    //   });
+    // } catch (error) {
+    //   newUser.verificationCode = null;
+    //   await newUser.save();
 
-      res.status(201).json({
-        status: 'success',
-        message:
-          'An email with a verification code has been sent to your email',
-      });
-    } catch (error) {
-      newUser.verificationCode = null;
-      await newUser.save();
-
-      return res.status(500).json({
-        status: 'error',
-        message: 'There was an error sending email, please try again',
-      });
-    }
+    //   return res.status(500).json({
+    //     status: 'error',
+    //     message: 'There was an error sending email, please try again',
+    //   });
+    // }
   } catch (err: any) {
     if (err.code === '23505') {
       return res.status(409).json({

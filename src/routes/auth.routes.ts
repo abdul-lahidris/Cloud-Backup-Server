@@ -6,7 +6,7 @@ import {
   registerUserHandler,
   verifyEmailHandler,
 } from '../controllers/auth.controller';
-import { deserializeUser } from '../middleware/deserializeUser';
+import { authorize } from '../middleware/authorize';
 import { requireUser } from '../middleware/requireUser';
 import { validate } from '../middleware/validate';
 import {
@@ -24,7 +24,7 @@ router.post('/register', validate(createUserSchema), registerUserHandler);
 router.post('/login', validate(loginUserSchema), loginUserHandler);
 
 // Logout user
-router.get('/logout', deserializeUser, requireUser, logoutHandler);
+router.get('/logout', authorize, requireUser, logoutHandler);
 
 // Refresh access token
 router.get('/refresh', refreshAccessTokenHandler);

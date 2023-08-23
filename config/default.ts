@@ -1,6 +1,6 @@
 export default {
-  origin: 'http://localhost:3000',
-  accessTokenExpiresIn: 15,
+  origin: 'http://localhost:8000',
+  accessTokenExpiresIn: 60,
   refreshTokenExpiresIn: 60,
   redisCacheExpiresIn: 60,
   emailFrom: 'contact@codevoweb.com',

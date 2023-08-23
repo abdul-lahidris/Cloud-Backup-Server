@@ -1,10 +1,12 @@
+import { bool } from 'envalid';
 import { NextFunction, Request, Response } from 'express';
+import { RoleEnumType } from '../entities/user.entity';
 import { findUserById } from '../services/user.service';
 import AppError from '../utils/appError';
 import redisClient from '../utils/connectRedis';
 import { verifyJwt } from '../utils/jwt';
 
-export const deserializeUser = async (
+export const authorize = (roles :RoleEnumType[]) => async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -48,6 +50,12 @@ export const deserializeUser = async (
     if (!user) {
       return next(new AppError(401, `Invalid token or session has expired`));
     }
+
+    //check if the user has a valid role
+    const validRole:Boolean =roles.length > 0 && roles.includes(user.role) 
+    if (roles.length > 0 && !roles.includes(user.role)) {
+      return next(new AppError(401, `You do not have access to this resoure`));
+    }    
 
     // Add user to res.locals
     res.locals.user = user;

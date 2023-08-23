@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rise Test Media Streaming - abdullahidris</title>
+</head>
+<body>
+  <h1>Video Streaming</h1>
+
+  <h2>Video Player</h2>
+  <video controls>
+    <source id="videoSource" type="video/mp4">
+    Your browser does not support the video element.
+  </video>
+
+  <script>
+    const videoPlayer = document.getElementById('videoSource');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('id');
+
+    // Update the server URL
+    
+    const serverUrl = location.host;// 'http://localhost:8000';
+    videoPlayer.src = `http://${serverUrl}/api/stream/${fileId}`;
+  </script>
+</body>
+</html>
