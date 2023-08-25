@@ -22,6 +22,12 @@ export class UserFile extends Model {
   @Column({default: false})
   isUnsafe: boolean;
 
+  @Column({default: false})
+  deleted: boolean;
+
+  @Column({ default: 0 })
+  deleteApprovalCount: number;
+
   @ManyToOne(() => User, user => user.files)
   user: User;
 

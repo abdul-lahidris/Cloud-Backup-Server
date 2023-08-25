@@ -7,6 +7,12 @@ import {
   updateFileHandler,
   deleteFileHandler,
   getAllFilesHandler,
+  compressFileHandler,
+  getAllHistoryHandler,
+  getHistoryByFileIdHandler,
+  getUserFileHistoryHandler,
+  unsafeFileHandler,
+  ApproveUnsafeFileHandler,
 } from '../controllers/file.controller';
 import { authorize } from '../middleware/authorize';
 import { requireUser } from '../middleware/requireUser';
@@ -16,11 +22,13 @@ import {
   getFileByIdSchema,
   getFileByUserIdSchema,
   updateFileSchema,
-  deleteFileSchema
+  deleteFileSchema,
+  compressFileSchema
 } from '../schemas/file.schema';
 
 import multer from 'multer';
 import { RoleEnumType } from '../entities/user.entity';
+import { getHistoryByFileIdSchema, getUserFileHistorySchema } from '../schemas/fileHistory.schema';
 const upload = multer();
 
 
@@ -45,7 +53,19 @@ router.get('/user/:userId', validate(getFileByUserIdSchema), getUserFileHandler)
 router.delete('/:fileId', validate(deleteFileSchema), authorize([RoleEnumType.USER]), deleteFileHandler);
 
 // Mark file as unsafe
-router.delete('/unsafe/:fileId', validate(deleteFileSchema), authorize([RoleEnumType.ADMIN]), deleteFileHandler);
+router.post('/unsafe/:fileId', validate(deleteFileSchema), authorize([RoleEnumType.ADMIN]), unsafeFileHandler);
 
+// Approve marked file for deletion
+router.post('/unsafe/approve/:fileId', validate(deleteFileSchema), authorize([RoleEnumType.ADMIN]), ApproveUnsafeFileHandler);
+
+// compress files
+router.post('/compress', validate(compressFileSchema), compressFileHandler);
+
+// Get all files histories
+router.get('/history/all', authorize([RoleEnumType.ADMIN]), getAllHistoryHandler);
+// Get a file's history
+router.get('/history/file/:fileId/', validate(getHistoryByFileIdSchema), getHistoryByFileIdHandler);
+// Get a user's file history
+router.get('/history/user/:userId', validate(getUserFileHistorySchema), getUserFileHistoryHandler);
 
 export default router;

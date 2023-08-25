@@ -12,6 +12,14 @@ export const createFileSchema = object({
   }),
 });
 
+export const compressFileSchema = object({
+  body: object({
+    files: string().array().nonempty(),
+    archiveName: string(),
+    destinationFolder: string(),
+  }),
+});
+
 const params = {
   params: object({
     fileId: string(),
@@ -42,6 +50,7 @@ export const deleteFileSchema = object({
 });
 
 export type CreateFileInput = TypeOf<typeof createFileSchema>['body'];
+export type CompressFileInput = TypeOf<typeof compressFileSchema>['body'];
 export type GetFileInput = TypeOf<typeof getFileByIdSchema>['params'];
 export type GetUserFilesInput = TypeOf<typeof getFileByUserIdSchema>['params'];
 export type UpdateFileInput = TypeOf<typeof updateFileSchema>;

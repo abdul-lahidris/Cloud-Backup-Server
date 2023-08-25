@@ -14,21 +14,26 @@ export const getFileById = async (fileId: string) => {
 };
 
 export const getFileByName = async (fileName: string) => {
-    return await fileRepository.findOneBy({ name: fileName });
+    return await fileRepository.findOneBy({ name: fileName, deleted: false });
   };
 
+export const getPendingUnsafeFiles = async () => {
+  return await fileRepository.findOneBy({ isUnsafe: true, deleted: false });
+};
+
 export const FileExistsInFolder = async (fileName: string, folderId: string) => {
-    const file = await fileRepository.findOneBy({ name: fileName, folderId: folderId });
+    const file = await fileRepository.findOneBy({ name: fileName, folderId: folderId, deleted: false });
     return file ? true : false;
   };
 
 export const getFiles = async () => {
     return await fileRepository.createQueryBuilder("file")
+    .where({deleted: false})
     .getMany();
   };
 
 export const getUserFiles = async (user: string) => {
     return await fileRepository.createQueryBuilder("file")
-    .where({userId: user})
+    .where({userId: user, deleted: false})
     .getMany();
   };

@@ -2,23 +2,26 @@
 import { S3 } from 'aws-sdk';
 import { HeadObjectRequest } from 'aws-sdk/clients/s3';
 import config from 'config';
-import exp from 'constants';
 import { NextFunction, Request, Response } from 'express';
-import multer from 'multer';
 import { s3, s3BucketName } from '../../config/aws-config';
 import { UserFile } from '../entities/file.entity';
 import { Folder } from '../entities/folder.entity';
+import { FileActionEnumType, FileHistory } from '../entities/fileHistory.entity';
 import {
+  CompressFileInput,
   CreateFileInput,
   DeleteFileInput,
   GetFileInput,
   GetUserFilesInput,
   UpdateFileInput
 } from '../schemas/file.schema';
-import { createFile, FileExistsInFolder, getFileById, getFileByName, getFiles, getUserFiles } from '../services/file.service';
+import { GetHistoryByFileIdInput, GetUserFileHistoryInput } from '../schemas/fileHistory.schema';
+import { createFile, FileExistsInFolder, getFileById, getFileByName, getFiles, getPendingUnsafeFiles, getUserFiles } from '../services/file.service';
+import { createFileHistory, getFileHistories, getFileHistoriesByFile, getUserFileHistories } from '../services/fileHistory.service';
 import { getFolderById, getFolderByName } from '../services/folder.service';
-import { findUserById } from '../services/user.service';
 import AppError from '../utils/appError';
+import {CompressFiles} from '../utils/compressFiles';
+import { adminHasApproved, createFileApproval } from '../services/fileApproval.Service';
 
 const uploadFileHandler = async (
     path: string,
@@ -103,7 +106,14 @@ export const createFileHandler = async (
           folderId: parentFolder.id
       }
       const file = await createFile(newFile);
-  
+
+      //create file History
+      await createFileHistory({
+        userId: userId,
+        fileId: file.id,
+        actionType: FileActionEnumType.UPLOAD,
+        remark: `${userId} uploaded ${file.name} to ${parentFolder.path}/${parentFolder.name}`
+      })
       res.status(201).json({
         status: 'success',
         data: {
@@ -228,23 +238,52 @@ export const createFileHandler = async (
       if (!file) {
         return next(new AppError(404, 'File with that ID not found'));
       }
-      
-      //delete from s3;
-      const key = file.url.split('s3.amazonaws.com/').pop();
-      if (!key) {
-        return next(new AppError(400, 'Bad file Url'));
-      }
-      try {
-        await deleteFile(file.url);
-      } catch (error) {
-        return next(new AppError(500, 'Unable to delete file from server'));
-      }
-      await file.remove();
+      file.deleted = true;
+      file.save();
+
+      //create file History
+      await createFileHistory({
+        userId: res.locals.user.id,
+        fileId: file.id,
+        actionType: FileActionEnumType.UPLOAD,
+        remark: `${res.locals.user.id} deleted ${file.name}`
+      });
+      // //delete from s3;
+      // const key = file.url.split('s3.amazonaws.com/').pop();
+      // if (!key) {
+      //   return next(new AppError(400, 'Bad file Url'));
+      // }
+      // try {
+      //   await deleteFile(file.url);
+      // } catch (error) {
+      //   return next(new AppError(500, 'Unable to delete file from server'));
+      // }
+      // await file.remove();
   
       res.status(200).json({
         status: 'success',
         data: `${file.name} Deleted successfully`,
       });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+
+  export const getPendingUnsafeFilesHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+        const files = await getPendingUnsafeFiles();
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+            files,
+            },
+        });
     } catch (err: any) {
       next(err);
     }
@@ -262,21 +301,103 @@ export const createFileHandler = async (
         return next(new AppError(404, 'File with that ID not found'));
       }
       
-      //delete from s3;
-      const key = file.url.split('s3.amazonaws.com/').pop();
-      if (!key) {
-        return next(new AppError(400, 'Bad file Url'));
+      if (file.isUnsafe) {
+        return next(new AppError(400, 'File is already marked as unsafe'));
       }
-      try {
-        await deleteFile(file.url);
-      } catch (error) {
-        return next(new AppError(500, 'Unable to delete file from server'));
-      }
-      await file.remove();
+      // const threshold = config.get<{threshold: number;}>('fileApproval');
+
+      // file.deleted = true;
+      file.isUnsafe = true
+      file.save();
+
+      //create file History
+      await createFileHistory({
+        userId: res.locals.user.id,
+        fileId: file.id,
+        actionType: FileActionEnumType.UPLOAD,
+        remark: `${res.locals.user.id} marked ${file.name} as unsafe and will be deleted`
+      });
+      // //delete from s3;
+      // const key = file.url.split('s3.amazonaws.com/').pop();
+      // if (!key) {
+      //   return next(new AppError(400, 'Bad file Url'));
+      // }
+      // try {
+      //   await deleteFile(file.url);
+      // } catch (error) {
+      //   return next(new AppError(500, 'Unable to delete file from server'));
+      // }
+      // await file.remove();
   
       res.status(200).json({
         status: 'success',
-        data: `${file.name} Deleted successfully`,
+        data: `${file.name} marked as unsafe successfully`,
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+  export const ApproveUnsafeFileHandler = async (
+    req: Request<DeleteFileInput>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const file = await getFileById(req.params.fileId);
+  
+      if (!file) {
+        return next(new AppError(404, 'File with that ID not found'));
+      }
+
+      if (file.deleted) {
+        return next(new AppError(400, 'File already deleted'));
+      }
+      if (!file.isUnsafe) {
+        return next(new AppError(400, 'File is not marked as unsafe'));
+      }
+      const thresholdVal = config.get<{threshold: number;}>('fileApproval');
+      
+      // check if admin has approved this file before
+      const alreadyApproved = await adminHasApproved(res.locals.user.id, file.id);
+      if(alreadyApproved) {
+        return next(new AppError(400, 'You have already approved this file'));
+      }
+      // file.deleted = true;
+      file.deleteApprovalCount += 1;
+      file.deleted = file.deleteApprovalCount == thresholdVal.threshold ? true : false;
+      file.isUnsafe = true
+      file.save();
+
+      // create approval
+      await createFileApproval({
+        userId: res.locals.user.id,
+        fileId: file.id,
+        approvalNumber: file.deleteApprovalCount
+      });
+
+      //create file History
+      await createFileHistory({
+        userId: res.locals.user.id,
+        fileId: file.id,
+        actionType: FileActionEnumType.UPLOAD,
+        remark: `${res.locals.user.id} approved unsafe file: ${file.name} for deletion ${thresholdVal.threshold-file.deleteApprovalCount} approvals left`
+      });
+      // //delete from s3;
+      // const key = file.url.split('s3.amazonaws.com/').pop();
+      // if (!key) {
+      //   return next(new AppError(400, 'Bad file Url'));
+      // }
+      // try {
+      //   await deleteFile(file.url);
+      // } catch (error) {
+      //   return next(new AppError(500, 'Unable to delete file from server'));
+      // }
+      // await file.remove();
+  
+      res.status(200).json({
+        status: 'success',
+        data: `${file.name} approved as unsafe for deletion ${thresholdVal.threshold-file.deleteApprovalCount} approvals left`,
       });
     } catch (err: any) {
       next(err);
@@ -293,6 +414,9 @@ export const createFileHandler = async (
   
       if (!file) {
         return next(new AppError(404, 'File with that ID not found'));
+      }
+      if (file.isUnsafe) {
+        return next(new AppError(400, 'File is already marked as unsafe'));
       }
       const params: HeadObjectRequest = {
         Bucket: s3BucketName,
@@ -318,6 +442,120 @@ export const createFileHandler = async (
     }
   };
 
+  export const compressFileHandler = async (
+    req: Request<{}, {}, CompressFileInput>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // const user = await findUserById(res.locals.user.id as string);
+      // if file id is null, get the user's root file.
+      const {files, archiveName, destinationFolder} = req.body
+  
+      if(files.length < 1){
+        return next(new AppError(400, 'Select at least one file'));
+      }
+      const toBeCompressed: string[] = [];
+
+      // Get file Keys
+      for(const id of files){
+        const file = await getFileById(id);
+        toBeCompressed.push(decodeURIComponent(file?.url.split('s3.amazonaws.com/').pop()!))
+      }
+      let folderPath = "root";
+      if(destinationFolder){
+        const folder = await getFolderById(destinationFolder);
+        folderPath = folder ? `${folder?.path}/${folder?.name}` : "root";
+      }
+      const newArchiveKey = await CompressFiles(toBeCompressed, archiveName, folderPath ?? "root");
+      if(!newArchiveKey)
+        return next(new AppError(500, 'Error Archiving files'));
+      // create file record  
+      const newFile : Partial<UserFile> = {
+          name: `${archiveName}.zip`,
+          url: `https://${s3BucketName}.s3.amazonaws.com/${newArchiveKey}`,
+          userId: res.locals.user.id,
+          folderId: destinationFolder?? res.locals.user.id
+      }
+    const file = await createFile(newFile);
+      res.status(201).json({
+        status: 'success',
+        data: {
+          file: file,
+        },
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+/// =================FILE HISTORY======================///
+
+export const getAllHistoryHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+   
+    const fileHistories = await getFileHistories();
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        fileHistories
+      },
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+export const getHistoryByFileIdHandler = async (
+  req: Request<GetHistoryByFileIdInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const file = await getFileById(req.params.fileId);
+    
+    if (!file) {
+      return next(new AppError(404, 'File with that ID not found'));
+    }
+    const fileHistories = await getFileHistoriesByFile(req.params.fileId);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        file,
+        history: fileHistories
+      },
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+export const getUserFileHistoryHandler = async (
+  req: Request<GetUserFileHistoryInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const fileHistories = await getUserFileHistories(req.params.userId);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        history: fileHistories
+      },
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// ================HELPER============================/
 async function deleteFile(objectKey: string) {
     const params: S3.DeleteObjectRequest = {
       Bucket: s3BucketName,

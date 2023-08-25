@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import {
   CreateUserInput,
   LoginUserInput,
+  RevokeSessionInput,
   VerifyEmailInput,
 } from '../schemas/user.schema';
 import {
@@ -243,6 +244,38 @@ export const refreshAccessTokenHandler = async (
     res.status(200).json({
       status: 'success',
       access_token,
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+export const revokeAccessTokenHandler = async (
+  req: Request<RevokeSessionInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+
+    const user = await findUserById(req.body.userId);
+
+    if (!user) {
+      return next(new AppError(404, "User not found"));
+    }
+    // Check if user has a valid session
+    const session = await redisClient.get(user.id);
+
+    if (!session) {
+      return next(new AppError(403, "user does not have a valid session"));
+    }
+    
+    // remove user session
+    await redisClient.del(user.id);
+
+    // 5. Send response
+    res.status(200).json({
+      status: 'success',
+      message: `${user.id} session has been revoked`,
     });
   } catch (err: any) {
     next(err);

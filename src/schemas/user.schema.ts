@@ -43,6 +43,14 @@ export const verifyEmailSchema = object({
 
 export const getByIdSchema = object({
   params: object({
+    userId: string({
+      required_error: 'user Id is required',
+    }),
+  }),
+});
+
+export const revokeSessionSchema = object({
+  body: object({
     userId: string(),
   }),
 });
@@ -55,6 +63,7 @@ export type CreateUserInput = Omit<
 >;
 
 export type LoginUserInput = TypeOf<typeof loginUserSchema>['body'];
+export type RevokeSessionInput = TypeOf<typeof revokeSessionSchema>['body'];
 export type VerifyEmailInput = TypeOf<typeof verifyEmailSchema>['params'];
 
 export type GetUserByIdInput = TypeOf<typeof getByIdSchema>['params'];

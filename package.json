@@ -7,12 +7,14 @@
     "start": "ts-node-dev --respawn --transpile-only --exit-child src/app.ts",
     "build": "tsc -p .",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migrate": "rm -rf build && yarn build && yarn typeorm migration:generate ./src/migrations/initialCreate -d ./src/utils/data-source.ts",
+    "migrate": "rm -rf build && yarn build && yarn typeorm migration:generate ./src/migrations/fileApproval -d ./src/utils/data-source.ts",
     "db:push": "rm -rf build && yarn build && yarn typeorm migration:run -d src/utils/data-source.ts",
     "importData": "npx ts-node-dev --transpile-only --exit-child  src/data/seeder.ts"
   },
   "dependencies": {
+    "@types/archiver": "^5.3.2",
     "@types/multer": "^1.4.7",
+    "archiver": "^6.0.0",
     "aws-sdk": "^2.1442.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.1",
