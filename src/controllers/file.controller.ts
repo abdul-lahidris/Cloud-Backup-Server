@@ -71,7 +71,9 @@ export const createFileHandler = async (
       // const user = await findUserById(res.locals.user.id as string);
       // if file id is null, get the user's root file.
       const {folderId, userId} = req.body
-  
+      if(!userId){
+          return next(new AppError(400, 'User Id is required'))
+      }
       let parentFolder: Folder | null = null;
       if(!folderId){
           parentFolder = await getFolderByName(userId);

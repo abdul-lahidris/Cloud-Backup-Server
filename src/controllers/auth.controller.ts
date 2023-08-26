@@ -81,7 +81,8 @@ export const registerUserHandler = async (
     res.status(201).json({
       status: 'success',
       message:'Use this link to verify your email',
-      verifyUrl: apiUrl
+      verifyUrl: apiUrl,
+      id: newUser.id
     });
     // try {
     //   await new Email(newUser, redirectUrl).sendVerificationCode();

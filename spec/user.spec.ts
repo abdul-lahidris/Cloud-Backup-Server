@@ -17,15 +17,15 @@ describe('Users Handlers', () => {
     const userIds: string[] = [];
     let agent: SuperTest<Test>;
     const testUsers : Partial<User>[]= [
-        { name: 'Jack', email: 'ripper@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
-        { name: 'Elon', email: 'carman@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN },
-        { name: 'Zuck', email: 'ts-zyck@trise.co', password: "Pass123.", role:  RoleEnumType.USER }
+        { name: 'Jack', email: 'ttripxper@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
+        { name: 'Zuck', email: 'pots-zycpk@trise.co', password: "Pass123.", role:  RoleEnumType.USER},
+        { name: 'Elon', email: 'cSarr2man@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true  },
     ]
 
     async function createTestData() {
         const user1 = await userRepository.save(userRepository.create(testUsers[0]));
         const user2 = await userRepository.save(userRepository.create(testUsers[1]));
-        console.log("--> user data created", [user1, user2]);
+        console.log("--> user data created")//, [user1, user2]);
         userIds.push(user1.id);
         userIds.push(user2.id);
 
@@ -57,6 +57,7 @@ describe('Users Handlers', () => {
 
     afterAll(async () => {
        await destroyTestData();
+       await AppDataSource.destroy()
     });
 
     describe(`"POST:${registerUsersPath}"`, () => {

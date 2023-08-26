@@ -53,7 +53,7 @@ export const createFolderHandler = async (
     res.status(201).json({
       status: 'success',
       data: {
-        post: folder,
+        folder: folder,
       },
     });
   } catch (err: any) {
