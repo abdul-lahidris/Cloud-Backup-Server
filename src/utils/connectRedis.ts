@@ -1,6 +1,14 @@
+require('dotenv').config();
 import { createClient } from 'redis';
 
-const redisUrl = 'redis://localhost:6379';
+
+import config from 'config';
+
+const redisConfig = config.get<{
+  redisUrl: string;
+}>('redis');
+
+const redisUrl = redisConfig.redisUrl;
 
 const redisClient = createClient({
   url: redisUrl,
@@ -13,8 +21,8 @@ const connectRedis = async () => {
     redisClient.set('try', 'Hello Welcome to Express with TypeORM');
   } catch (error) {
     console.log(error);
-    // setTimeout(connectRedis, 2000);
-    process.exit();
+    setTimeout(connectRedis, 5000);
+    // process.exit();
   }
 };
 

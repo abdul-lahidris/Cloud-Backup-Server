@@ -3,5 +3,5 @@ export default {
   accessTokenExpiresIn: 60,
   refreshTokenExpiresIn: 60,
   redisCacheExpiresIn: 60,
-  emailFrom: 'contact@codevoweb.com',
+  emailFrom: 'contact@abdullahidris.com',
 };
