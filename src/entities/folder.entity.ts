@@ -19,6 +19,6 @@ export class Folder extends Model {
   @ManyToOne(() => User, user => user.folders)
   user: User;
 
-  @OneToMany(() => UserFile, file => file.folder)
+  @OneToMany(() => UserFile, file => file.folder, { onDelete: 'CASCADE' })
   files: UserFile[];
 }

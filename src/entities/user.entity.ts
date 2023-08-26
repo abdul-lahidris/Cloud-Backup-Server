@@ -44,10 +44,10 @@ export class User extends Model {
   })
   verificationCode!: string | null;
 
-  @OneToMany(() => Folder, folder => folder.user)
+  @OneToMany(() => Folder, folder => folder.user, { onDelete: 'CASCADE' })
   folders: Folder[];
 
-  @OneToMany(() => UserFile, file => file.user)
+  @OneToMany(() => UserFile, file => file.user, { onDelete: 'CASCADE' })
   files: UserFile[];
 
   @BeforeInsert()

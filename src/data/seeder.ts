@@ -1,34 +1,64 @@
-// import { faker } from '@faker-js/faker';
-// import { Post } from '../entities/post.entity';
-// import { User } from '../entities/user.entity';
+import { faker } from '@faker-js/faker';
+import { Console } from 'console';
+import { UserFile } from '../entities/file.entity';
+import { Folder } from '../entities/folder.entity';
+import { User, RoleEnumType } from '../entities/user.entity';
 // import { AppDataSource } from '../utils/data-source';
+import { TestAppDataSource } from '../utils/test-data-source';
 
-// const postRepository = AppDataSource.getRepository(Post);
-// const userRepository = AppDataSource.getRepository(User);
+const fileRepository = TestAppDataSource.getRepository(UserFile);
+const folderRepository = TestAppDataSource.getRepository(Folder);
+const userRepository = TestAppDataSource.getRepository(User);
 
-// AppDataSource.initialize()
-//   .then(async () => {
-//     const user = await userRepository.findOne({
-//       where: { id: '3acc4249-c7c7-4ce0-b87c-01564dd9ba4e' },
-//     });
-//     console.log('Connected to database...');
-//     (async function () {
-//       try {
-//         for (let i = 0; i < 50; i++) {
-//           const postInput: Partial<Post> = {
-//             title: faker.lorem.words(4),
-//             content: faker.lorem.words(10),
-//             user: user!,
-//             image: faker.image.imageUrl(),
-//           };
+TestAppDataSource.initialize()
+    .then(async () => {
+        console.log('Connected to database...');
+        try {
+            for (let i = 0; i < 20; i++) {
+                const user = await userRepository.save(userRepository.create({
+                    name: faker.name.firstName(),
+                    email: faker.name.lastName() + "@seed.com",
+                    password: "Pass123.",
+                    role: RoleEnumType.USER
+                }));
 
-//           await postRepository.save(postRepository.create(postInput));
-//           console.log(`Added ${postInput.title} to database`);
-//         }
-//       } catch (error) {
-//         console.log(error);
-//         process.exit(1);
-//       }
-//     })();
-//   })
-//   .catch((error: any) => console.log(error));
+                // create user folder
+                const folderInput: Partial<Folder> = {
+                    name: faker.lorem.words(1),
+                    path: 'root',
+                    userId: user!.id,
+                };
+
+                const rootFolder = await folderRepository.save(folderRepository.create(folderInput));
+                const folderIds: string[] = [];
+                for (let i = 0; i < 5; i++) {
+                    const folderInput: Partial<Folder> = {
+                        name: faker.lorem.words(1),
+                        path: `root/${rootFolder}`,
+                        userId: user!.id,
+                    };
+
+                    const f = await folderRepository.save(folderRepository.create(folderInput));
+                    folderIds.push(f.id);
+                }
+                for (let i = 0; i < 20; i++) {
+                    const fileInput: Partial<UserFile> = {
+                        name: faker.lorem.words(1) + ".test",
+                        folderId: folderIds[Math.floor(i / 5)],
+                        userId: user!.id,
+                        url: "https://idris-rise-bucket.s3.amazonaws.com/root/a6c552a2-3585-4e48-8d19-be519371021f/s.pdf"
+                    };
+
+                    await fileRepository.save(fileRepository.create(fileInput));
+
+                }
+            }
+        console.log("-- DONE SEEDING...")
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+
+
+    })
+    .catch((error: any) => console.log(error));
