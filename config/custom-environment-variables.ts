@@ -37,5 +37,6 @@ export default {
   },
   redis: {
     redisUrl:"REDIS_URL"
-  }
+  },
+  origin: 'R_ORIGIN'
 };
