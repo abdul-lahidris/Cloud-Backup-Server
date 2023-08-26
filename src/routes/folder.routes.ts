@@ -31,7 +31,7 @@ router.patch('/update/:folderId', validate(updateFolderSchema), updateFolderHand
 router.get('/', authorize([RoleEnumType.ADMIN]), getAllFoldersHandler);
 router.get('/:folderId', validate(getFolderByIdSchema), getFolderHandler);
 
-// Get folder by id
+// Get user folders by user id
 router.get('/user/:userId', validate(getFolderByUserIdSchema), getUserFolderHandler);
 
 // Refresh access token

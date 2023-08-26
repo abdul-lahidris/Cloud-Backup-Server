@@ -1,5 +1,4 @@
 import supertest from 'supertest';
-import { getConnection } from 'typeorm';
 import { User, RoleEnumType } from "../src/entities/user.entity";
 import { AppDataSource } from "../src/utils/data-source";
 
@@ -10,7 +9,7 @@ import app from '../src/app';
 
 
 const userRepository = AppDataSource.getRepository(User);
-describe('Users Routes', () => {
+describe('Users Handlers', () => {
     const usersPath = '/api/auth';
     const registerUsersPath = `${usersPath}/register`;
     const loginUsersPath = `${usersPath}/login`;
