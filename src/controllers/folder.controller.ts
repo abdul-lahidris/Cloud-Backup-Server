@@ -20,7 +20,10 @@ export const createFolderHandler = async (
     // const user = await findUserById(res.locals.user.id as string);
     // if folder id is null, get the user's root folder.
     const {name, folderId, userId} = req.body
-
+    if(res.locals.user.id != userId && res.locals.user.role != 'admin'){
+      return next(new AppError(401, 'Only an admin can create a file for another user'))
+    }
+    
     let parentFolder: Folder | null = null;
     if(!folderId){
         parentFolder = await getFolderByName(userId);

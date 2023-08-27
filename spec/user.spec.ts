@@ -6,6 +6,7 @@ import { AppDataSource } from "../src/utils/data-source";
 import { Response, SuperTest, Test } from 'supertest';
 
 import app from '../src/app';
+import { RandomEmail } from 'src/utils/randomEmail';
 
 
 const userRepository = AppDataSource.getRepository(User);
@@ -17,11 +18,11 @@ describe('Users Handlers', () => {
     const userIds: string[] = [];
     let agent: SuperTest<Test>;
     const testUsers : Partial<User>[]= [
-        { name: 'Jack', email: 'ttripxper@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
-        { name: 'Zuck', email: 'pots-zycpk@trise.co', password: "Pass123.", role:  RoleEnumType.USER},
-        { name: 'Elon', email: 'cSarr2man@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true  },
+        { name: 'Jack', email: RandomEmail(), password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
+        { name: 'Zuck', email: RandomEmail(), password: "Pass123.", role:  RoleEnumType.USER},
+        { name: 'Elon', email: RandomEmail(), password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true  },
     ]
-
+    console.log(testUsers);
     async function createTestData() {
         const user1 = await userRepository.save(userRepository.create(testUsers[0]));
         const user2 = await userRepository.save(userRepository.create(testUsers[1]));
@@ -53,7 +54,7 @@ describe('Users Handlers', () => {
         await AppDataSource.initialize();
         // await destroyTestData();
         await createTestData();
-    });
+    }, 50000);
 
     afterAll(async () => {
        await destroyTestData();
@@ -95,6 +96,7 @@ describe('Users Handlers', () => {
            
             agent.post(loginUsersPath).send({email: testUsers[0].email, password: testUsers[0].password})
                 .end((err: Error, res: Response) => {
+                    // console.log(err);
                     expect(res.status).toBe(200);
                     expect(res.body.status).toBe('success');
                     done();

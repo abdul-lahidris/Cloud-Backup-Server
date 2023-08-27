@@ -9,6 +9,7 @@ import app from '../src/app';
 import { signTokens } from 'src/services/user.service';
 import { UserFile } from 'src/entities/file.entity';
 import { Folder } from 'src/entities/folder.entity';
+import { RandomEmail } from 'src/utils/randomEmail';
 
 
 const userRepository = AppDataSource.getRepository(User);
@@ -25,8 +26,8 @@ describe('Files Routes', () => {
     const folderIds: string[] = [];
     let agent: SuperTest<Test>;
     const testUsers : Partial<User>[]= [
-        { name: 'Jack', email: 'ttripxper@t.co', password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
-        { name: 'Zuck', email: 'pots-zycpk@trise.co', password: "Pass123.", role:  RoleEnumType.USER, verified: true }
+        { name: 'Jack', email: RandomEmail(), password: "Pass123.", role:  RoleEnumType.ADMIN, verified: true},
+        { name: 'Zuck', email: RandomEmail(), password: "Pass123.", role:  RoleEnumType.USER, verified: true }
     ]
 
     
@@ -85,7 +86,7 @@ describe('Files Routes', () => {
         await AppDataSource.initialize();
         // await destroyTestData();
         await createTestData();
-    });
+    }, 50000);
 
     afterAll(async () => {
        await destroyTestData();

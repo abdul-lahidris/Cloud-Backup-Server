@@ -19,8 +19,8 @@ export const AppDataSource = new DataSource({
   entities: ['src/entities/**/*.entity{.ts,.js}'],
   migrations: ['src/migrations/**/*{.ts,.js}'],
   subscribers: ['src/subscribers/**/*{.ts,.js}'],
-  ssl: true,
-  extra: {
+  ssl: process.env.NODE_ENV == 'test'? false : true,
+  extra: process.env.NODE_ENV == 'test'? {} : {
     ssl: {
       rejectUnauthorized: false
     }

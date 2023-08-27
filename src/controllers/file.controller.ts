@@ -74,6 +74,9 @@ export const createFileHandler = async (
       if(!userId){
           return next(new AppError(400, 'User Id is required'))
       }
+      if(res.locals.user.id != userId && res.locals.user.role != 'admin'){
+        return next(new AppError(401, 'Only an admin can create a file for another user'))
+      }
       let parentFolder: Folder | null = null;
       if(!folderId){
           parentFolder = await getFolderByName(userId);

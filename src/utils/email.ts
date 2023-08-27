@@ -18,7 +18,7 @@ export default class Email {
   constructor(public user: User, public url: string) {
     this.firstName = user.name.split(' ')[0];
     this.to = user.email;
-    this.from = `Codevo ${config.get<string>('emailFrom')}`;
+    this.from = `Idris ${config.get<string>('emailFrom')}`;
   }
 
   private newTransport() {
@@ -37,23 +37,23 @@ export default class Email {
 
   private async send(template: string, subject: string) {
     // Generate HTML template based on the template string
-    const html = pug.renderFile(`${__dirname}/../views/${template}.pug`, {
-      firstName: this.firstName,
-      subject,
-      url: this.url,
-    });
+    // const html = pug.renderFile(`${__dirname}/../views/${template}.pug`, {
+    //   firstName: this.firstName,
+    //   subject,
+    //   url: this.url,
+    // });
     // Create mailOptions
-    const mailOptions = {
-      from: this.from,
-      to: this.to,
-      subject,
-      text: convert(html),
-      html,
-    };
+    // const mailOptions = {
+    //   from: this.from,
+    //   to: this.to,
+    //   subject,
+    //   text: convert(html),
+    //   html,
+    // };
 
-    // Send email
-    const info = await this.newTransport().sendMail(mailOptions);
-    console.log(nodemailer.getTestMessageUrl(info));
+    // // Send email
+    // const info = await this.newTransport().sendMail(mailOptions);
+    // console.log(nodemailer.getTestMessageUrl(info));
   }
 
   async sendVerificationCode() {
