@@ -23,7 +23,7 @@ export const createFolderHandler = async (
     if(res.locals.user.id != userId && res.locals.user.role != 'admin'){
       return next(new AppError(401, 'Only an admin can create a file for another user'))
     }
-    
+
     let parentFolder: Folder | null = null;
     if(!folderId){
         parentFolder = await getFolderByName(userId);
@@ -89,16 +89,16 @@ export const getFolderHandler = async (
   next: NextFunction
 ) => {
   try {
-    const post = await getFolderById(req.params.folderId);
+    const folder = await getFolderById(req.params.folderId);
 
-    if (!post) {
+    if (!folder) {
       return next(new AppError(404, 'Folder with that ID not found'));
     }
 
     res.status(200).json({
       status: 'success',
       data: {
-        post,
+        folder,
       },
     });
   } catch (err: any) {
@@ -150,7 +150,7 @@ export const updateFolderHandler = async (
     res.status(200).json({
       status: 'success',
       data: {
-        post: updatedFolder,
+        folder: updatedFolder,
       },
     });
   } catch (err: any) {

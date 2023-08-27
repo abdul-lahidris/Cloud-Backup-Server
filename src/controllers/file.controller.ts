@@ -122,7 +122,7 @@ export const createFileHandler = async (
       res.status(201).json({
         status: 'success',
         data: {
-          post: file,
+          folder: file,
         },
       });
     } catch (err: any) {
@@ -224,7 +224,7 @@ export const createFileHandler = async (
       res.status(200).json({
         status: 'success',
         data: {
-          post: updatedFile,
+          folder: updatedFile,
         },
       });
     } catch (err: any) {
