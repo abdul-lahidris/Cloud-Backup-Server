@@ -45,6 +45,25 @@ export const updateFileSchema = object({
   }).partial(),
 });
 
+export const moveFileSchema = object({
+  ...params,
+  body: object({
+    destinationFolderId: string(),
+  }).partial(),
+});
+export const copyFileSchema = object({
+  ...params,
+  body: object({
+    destinationFolderId: string(),
+  }).partial(),
+});
+export const renameFileSchema = object({
+  ...params,
+  body: object({
+    name: string(),
+  }).partial(),
+});
+
 export const deleteFileSchema = object({
   ...params,
 });
@@ -54,4 +73,7 @@ export type CompressFileInput = TypeOf<typeof compressFileSchema>['body'];
 export type GetFileInput = TypeOf<typeof getFileByIdSchema>['params'];
 export type GetUserFilesInput = TypeOf<typeof getFileByUserIdSchema>['params'];
 export type UpdateFileInput = TypeOf<typeof updateFileSchema>;
+export type RenameFileInput = TypeOf<typeof renameFileSchema>;
+export type MoveFileInput = TypeOf<typeof moveFileSchema>;
+export type CopyFileInput = TypeOf<typeof copyFileSchema>;
 export type DeleteFileInput = TypeOf<typeof deleteFileSchema>['params'];

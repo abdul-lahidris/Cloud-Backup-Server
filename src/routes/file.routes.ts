@@ -13,6 +13,9 @@ import {
   getUserFileHistoryHandler,
   unsafeFileHandler,
   ApproveUnsafeFileHandler,
+  moveFileHandler,
+  renameFileHandler,
+  copyFileHandler,
 } from '../controllers/file.controller';
 import { authorize } from '../middleware/authorize';
 import { requireUser } from '../middleware/requireUser';
@@ -23,7 +26,10 @@ import {
   getFileByUserIdSchema,
   updateFileSchema,
   deleteFileSchema,
-  compressFileSchema
+  compressFileSchema,
+  moveFileSchema,
+  renameFileSchema,
+  copyFileSchema
 } from '../schemas/file.schema';
 
 import multer from 'multer';
@@ -39,7 +45,10 @@ router.post('/create', upload.single('file'), createFileHandler);
 // router.post('/create', validate(createFileSchema), createFileHandler);
 
 // update file
-router.patch('/update/:fileId', validate(updateFileSchema), authorize([RoleEnumType.USER]), updateFileHandler);
+router.patch('/update/:fileId', validate(updateFileSchema), authorize([RoleEnumType.USER]), updateFileHandler);// update file
+router.post('/move/:fileId', validate(moveFileSchema), authorize([RoleEnumType.USER]), moveFileHandler);// move file
+router.post('/rename/:fileId', validate(renameFileSchema), authorize([RoleEnumType.USER]), renameFileHandler);// rename file
+router.post('/copy/:fileId', validate(copyFileSchema), authorize([RoleEnumType.USER]), copyFileHandler); // copy file
 
 // Get file by id
 router.get('/', authorize([RoleEnumType.ADMIN]), getAllFilesHandler);

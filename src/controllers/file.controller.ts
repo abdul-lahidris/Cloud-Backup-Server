@@ -9,10 +9,13 @@ import { Folder } from '../entities/folder.entity';
 import { FileActionEnumType, FileHistory } from '../entities/fileHistory.entity';
 import {
   CompressFileInput,
+  CopyFileInput,
   CreateFileInput,
   DeleteFileInput,
   GetFileInput,
   GetUserFilesInput,
+  MoveFileInput,
+  RenameFileInput,
   UpdateFileInput
 } from '../schemas/file.schema';
 import { GetHistoryByFileIdInput, GetUserFileHistoryInput } from '../schemas/fileHistory.schema';
@@ -224,7 +227,131 @@ export const createFileHandler = async (
       res.status(200).json({
         status: 'success',
         data: {
+          file: updatedFile,
+        },
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+  export const renameFileHandler = async (
+    req: Request<RenameFileInput['params'], {}, RenameFileInput['body']>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const file = await getFileById(req.params.fileId);
+
+      if (!file) {
+        return next(new AppError(404, 'Post with that ID not found'));
+      }
+
+      
+      // if(file?.userId != res.locals.user.id && res.locals.user.role != 'admin'){
+      //   return next(new AppError(401, 'Only Admins can rename files for other users'));
+      // }
+  
+  
+      // Object.assign(file, req.body);
+      if(req.body.name) file.name = req.body.name!;
+
+      const updatedFile = await file.save();
+  
+      res.status(200).json({
+        status: 'success',
+        data: {
+          file: updatedFile,
+        },
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  };
+
+  export const moveFileHandler = async (
+    req: Request<MoveFileInput['params'], {}, MoveFileInput['body']>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const file = await getFileById(req.params.fileId);
+
+      if (!file) {
+        return next(new AppError(404, 'Post with that ID not found'));
+      }
+
+      const folder = await getFolderById(req.body.destinationFolderId!);
+      if (!folder) {
+        return next(new AppError(404, 'Destination folder not found'));
+      }
+      
+      // if(file?.userId != res.locals.user.id && res.locals.user.role != 'admin'){
+      //   return next(new AppError(401, 'Only Admins can rename files for other users'));
+      // }
+  
+  
+      // Object.assign(file, req.body);
+      if(req.body.destinationFolderId) file.folderId = folder.id!;
+      
+      const updatedFile = await file.save();
+  
+      res.status(200).json({
+        status: 'success',
+        data: {
           folder: updatedFile,
+        },
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  };  
+  
+  export const copyFileHandler = async (
+    req: Request<CopyFileInput['params'], {}, CopyFileInput['body']>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const file = await getFileById(req.params.fileId);
+
+      if (!file) {
+        return next(new AppError(404, 'Post with that ID not found'));
+      }
+
+      const folder = await getFolderById(req.body.destinationFolderId!);
+      if (!folder) {
+        return next(new AppError(404, 'Destination folder not found'));
+      }
+      
+      // if(file?.userId != res.locals.user.id && res.locals.user.role != 'admin'){
+      //   return next(new AppError(401, 'Only Admins can rename files for other users'));
+      // }
+  
+  
+      if(await FileExistsInFolder(req.file?.originalname!, folder.id)){
+        return next(new AppError(400, 'File already exists in this folder!'))
+      }
+
+      // const upload_path = `${parentFolder.path}/${parentFolder.name}`
+      // //upload file
+      // const uploadResult = await uploadFileHandler(upload_path, req, res, next);
+      // if(!uploadResult && !uploadResult!.fileUrl){
+      //   return next(new AppError(500, 'An error occured with file creation'));
+      //   }
+
+      const newFile : Partial<UserFile> = {
+          name: file.name,
+          url: file.url,
+          userId: file.userId,
+          folderId: folder.id
+      }
+      const createdFile = await createFile(newFile);
+  
+      res.status(200).json({
+        status: 'success',
+        data: {
+          file: createdFile,
         },
       });
     } catch (err: any) {
