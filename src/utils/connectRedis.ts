@@ -35,7 +35,7 @@ const connectRedis = async () => {
   try {
     const testStr = redisClient.isOpen;
     console.log("redis status before try connect: ", testStr);
-    if (!testStr)
+    // if (!testStr)
       await redisClient.connect();
     console.log('Redis client connect successfully');
     redisClient.set('try', 'Hello Welcome to Idris-s File backup api');
