@@ -140,11 +140,15 @@ export const createFileHandler = async (
     ) => {
       try {
           const files = await getFiles();
-  
+          
+          const resFiles = files.map(file => {
+            file.streamLink = getStreamLink(file.url, file.id)
+            return file;
+          })
           res.status(200).json({
               status: 'success',
               data: {
-              files,
+              files: resFiles,
               },
           });
       } catch (err: any) {
@@ -165,13 +169,7 @@ export const createFileHandler = async (
       }
 
       // Add stream link if the file is streamable
-      const fileType = file.url.split('.').pop();
-      if(fileType && fileType == "mp4"){
-        file.streamLink = `${config.get<string>('origin')}/video?id=${file.id}`;
-      }
-      if(fileType && fileType == "mp3"){
-        file.streamLink = `${config.get<string>('origin')}/audio?id=${file.id}`;
-      }
+      file.streamLink = getStreamLink(file.url, file.id);
       res.status(200).json({
         status: 'success',
         data: {
@@ -194,12 +192,16 @@ export const createFileHandler = async (
       if (!files) {
         return next(new AppError(404, 'No file for this user'));
       }
-  
+
+      const resFiles = files.map(file => {
+        file.streamLink = getStreamLink(file.url, file.id)
+        return file;
+      })
       res.status(200).json({
-        status: 'success',
-        data: {
-          files,
-        },
+          status: 'success',
+          data: {
+          files: resFiles,
+          },
       });
     } catch (err: any) {
       next(err);
@@ -316,7 +318,7 @@ export const createFileHandler = async (
       const file = await getFileById(req.params.fileId);
 
       if (!file) {
-        return next(new AppError(404, 'Post with that ID not found'));
+        return next(new AppError(404, 'File with that ID not found'));
       }
 
       const folder = await getFolderById(req.body.destinationFolderId!);
@@ -703,3 +705,14 @@ async function deleteFile(objectKey: string) {
       throw err;
     }
   }
+function getStreamLink(url: string, id: string): string{
+  let result = '';
+  const fileType = url.split('.').pop();
+      if(fileType && fileType == "mp4"){
+        result = `${config.get<string>('origin')}/video?id=${id}`;
+      }
+      if(fileType && fileType == "mp3"){
+        result = `${config.get<string>('origin')}/audio?id=${id}`;
+      }
+      return result;
+}
