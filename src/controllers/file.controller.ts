@@ -599,6 +599,15 @@ export const createFileHandler = async (
       let folderPath = "root";
       if(destinationFolder){
         const folder = await getFolderById(destinationFolder);
+        if(!folder){
+          return next(new AppError(400, 'Invalid Destination folder, leave empty to store archive in root folder'));
+        }
+        folderPath = folder ? `${folder?.path}/${folder?.name}` : "root";
+      }else {
+        const folder = await getFolderByName(res.locals.user.id);
+        if(!folder){
+          return next(new AppError(400, 'Destination folder nor root folder found for this user'));
+        }
         folderPath = folder ? `${folder?.path}/${folder?.name}` : "root";
       }
       const newArchiveKey = await CompressFiles(toBeCompressed, archiveName, folderPath ?? "root");
